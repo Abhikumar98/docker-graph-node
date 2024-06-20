@@ -1,0 +1,49 @@
+services:
+  ipfs:
+    # build:
+    #     context: .
+    #     dockerfile: ./dockerfile.ipfs
+    image: ipfs/kubo
+    working_dir: /ipfs
+    ports:
+      - "4001:4001"
+      - "5001:5001"
+      - "8080:8080"
+    volumes:
+      - './ipfs/staging:/export'
+      - './ipfs/data:/data/ipfs'
+
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: nodeDB
+      POSTGRES_INITDB_ARGS: "--locale=C -E UTF8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - 'db:/var/lib/postgresql/data'
+
+  graph-node:
+    image: graphprotocol/graph-node
+    environment:
+      postgres_host: postgres
+      postgres_user: admin
+      postgres_pass: secret
+      postgres_db: nodeDB
+      postgres_port: 5432
+      ipfs: ipfs:5001
+      ethereum: 666666666:https://rpc.degen.tips
+    ports:
+      - '8000:8000'
+      - '8001:8001'
+      - '8020:8020'
+      - '8030:8030'
+      - '8040:8040'
+    depends_on:
+      - ipfs
+      - postgres
+
+volumes:
+  db:
